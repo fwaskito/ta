@@ -1,0 +1,8 @@
+# ta/.gitignore
+.idea
+.metadata
+.project
+.pydevproject
+.spyproject
+.vscode
+*temp*
