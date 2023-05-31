@@ -4,7 +4,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from collection.slang.convertion import SlangConverter
-from collection.antonym.kamus_antonim import KamusAntonim
 
 
 class TextPreprocessor:
@@ -12,43 +11,42 @@ class TextPreprocessor:
         self._stopwords_id = self.get_stopwords()
         self._stemmer = StemmerFactory().create_stemmer()
         self._slang_converter = SlangConverter()
-        self._kamus_antonim = KamusAntonim()
 
-    def get_stopwords(self):
+    def get_stopwords(self) -> set:
         stopwords_id = stopwords.words("indonesian")
-        stopwords_id.remove("tidak")
         additions = [
             "ah", "ih", "uh", "eh", "oh", "hai", "halo", "oi", "ayo",
-            "ya", "yah", "mah", "nah", "wah", "alah", "oalah", "entah",
-            "dah", "dih", "aduh", "deh", "hore", "loh", "kok", "kek",
+            "yuk", "ya", "yah", "mah", "nah", "wah", "alah", "oalah",
+            "dah", "dih", "aduh", "deh", "loh", "kok", "kek", "entah",
             "sih", "si", "wow", "aw", "ea", "cie", "kak", "dik", "mba",
             "mas", "bang", "bu", "om", "bund", "nder", "thor", "nge",
             "kah", "ber", "an", "ku", "mu", "nya", "tawa", "berdeham"
         ]
         return set([*stopwords_id, *additions])
 
-    def clean(self, text):
+    def clean(self, text) -> str:
         return TextCleaner(text, full=True).text
 
-    def standardize(self, text):
+    def standardize(self, text) -> str:
         return self._slang_converter.convert(text)
 
-    def tokenize(self, text):
+    def tokenize(self, text) -> list[str]:
         return word_tokenize(text)
 
-    def filter(self, tokens):
+    def filter(self, tokens) -> list[str]:
         filtered_tokens = []
         for token in tokens:
             if token not in self._stopwords_id:
                 filtered_tokens.append(token)
         return filtered_tokens
 
-    def stem(self, tokens):
+    def stem(self, tokens) -> str:
         if type(tokens) is list:
             stemmed_tokens = []
             for token in tokens:
                 stemmed_token = self._stemmer.stem(token)
                 stemmed_tokens.append(stemmed_token)
+
             return " ".join(stemmed_tokens)
         return self._stemmer.stem(tokens)
 
@@ -64,7 +62,11 @@ class TextCleaner:
     #     Useless in Windows.
     #     """
     #     path = "data/dictionary/kaomoji.txt"
-    #     with open(path + 'kaomoji', encoding='utf-8', mode = 'r') as file:
+    #     with open(
+    #             path + 'kaomoji',
+    #             encoding='utf-8',
+    #             mode = 'r',
+    #     ) as file:
     #         kaomoji = file.read()
     #         kaomoji = kaomoji.rstrip("|")
     #         kaomoji = re.sub(r"\\", r"\\\\", kaomoji)
@@ -72,7 +74,7 @@ class TextCleaner:
     #         kaomoji = re.sub(r"\)", "\)", kaomoji)
     #         self.text = re.sub(r""+kaomoji, "", self.text)
 
-    def remove_emoji(self):
+    def remove_emoji(self) -> None:
         emoji_pattern = re.compile(
             "["
             "\U0001F600-\U0001F64F"
@@ -97,59 +99,59 @@ class TextCleaner:
         )
         self.text = emoji_pattern.sub(r"", self.text)
 
-    def remove_new_line(self):
+    def remove_new_line(self) -> None:
         regex = r"\s+"
         self.text = re.sub(regex, " ", self.text)
 
-    def remove_number(self):
+    def remove_number(self) -> None:
         regex = r"\d+"
         self.text = re.sub(regex, "", self.text)
 
-    def remove_mention(self):
+    def remove_mention(self) -> None:
         regex = r"@[^\s]+"
         self.text = re.sub(regex, "", self.text)
 
-    def replace_url(self, chars='link'):
+    def replace_url(self, chars='link') -> None:
         regex = r"http\S+"
         self.text = re.sub(regex, chars, self.text)
 
-    def separate_plural(self):
+    def separate_plural(self) -> None:
         regex = r"-"
         self.text = re.sub(regex, " ", self.text)
 
-    def replace_or(self, chars=" "):
+    def replace_or(self, chars=" ") -> None:
         regex = "/"
         self.text = re.sub(regex, chars, self.text)
 
-    def replace_and(self, chars="dan"):
+    def replace_and(self, chars="dan") -> None:
         regex = "&amp;"
         self.text = re.sub(regex, chars, self.text)
 
-    def remove_period_comma(self):
+    def remove_period_comma(self) -> None:
         regex = r"\.|\,|…"
         self.text = re.sub(regex, " ", self.text)
 
-    def remove_quotation(self):
+    def remove_quotation(self) -> None:
         regex = '“|”|„|‟|″|‴|‶|‷|❝|❞|ʺ|˝'
         self.text = re.sub(regex, "", self.text)
 
-    def remove_apostrophe(self):
+    def remove_apostrophe(self) -> None:
         regex = "‘|’|‚|‛|′|‵|ʹ|ʻ|ʼ|ʽ|ʾ|ʿ|ˈ|ˊ|ˋ"
         self.text = re.sub(regex, "", self.text)
 
-    def remove_hyphen_dash(self):
+    def remove_hyphen_dash(self) -> None:
         regex = "‑|‒|–|—|―"
         self.text = re.sub(regex, "", self.text)
 
-    def remove_math_symbol(self):
+    def remove_math_symbol(self) -> None:
         regex = "≠|²"
         self.text = re.sub(regex, "", self.text)
 
-    def remove_other_punct(self):
+    def remove_other_punct(self) -> None:
         self.text = self.text.translate(
             str.maketrans("", "", string.punctuation))
 
-    def remove_space(self):
+    def remove_space(self) -> None:
         regex = " +"
         self.text = re.sub(regex, " ", self.text).strip()
 
@@ -177,4 +179,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
