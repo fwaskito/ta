@@ -1,7 +1,7 @@
 import re
 import time
 from tqdm import tqdm
-import pandas as pd
+from pandas import DataFrame
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from preprocess.preprocess import TextPreprocessor
 
@@ -9,11 +9,11 @@ from preprocess.preprocess import TextPreprocessor
 class KamusSlangTemplate:
     def __init__(self, texts) -> None:
         self.texts = texts
-        self._template = pd.DataFrame(
+        self._template = DataFrame(
             columns=["Slang", "Makna", "No_Konteks", "Konteks"])
 
     @property
-    def template(self):
+    def template(self) -> DataFrame:
         return self._template
 
     def _prepare_text(self, text) -> dict:
@@ -27,7 +27,7 @@ class KamusSlangTemplate:
             "stemmed": stemmed_tokens,
         }
 
-    def create(self):
+    def create(self) -> None:
         slangs = []
         contexts = []
         indices = []
