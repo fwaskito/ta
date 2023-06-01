@@ -13,7 +13,7 @@ class TweetScraper:
         lang: str,
         since: str,
         until: str,
-    ):
+    ) -> None:
         self.keyword = keyword
         self.lang = lang
         self.since = since
