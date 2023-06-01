@@ -22,7 +22,7 @@ class Labeler(ABC):
         return self._labels
 
     @property
-    def polarities(self):
+    def polarities(self) -> list:
         return self._polarities
 
     @abstractmethod
@@ -36,7 +36,7 @@ class BlobLabeler(Labeler):
         self._subjectivities = []
 
     @property
-    def subjectivities(self):
+    def subjectivities(self) -> list:
         return self._subjectivities
 
     def _get_sentiment(self, text) -> float:
@@ -51,7 +51,7 @@ class BlobLabeler(Labeler):
             return 'positive'
         return 'neutral'
 
-    def generate(self):
+    def generate(self) -> None:
         for text in tqdm(self.texts, desc="labeling"):
             text = self._translator.translate(text)
             sentiment = self._get_sentiment(text)
@@ -78,7 +78,7 @@ class VaderLabeler(Labeler):
             return 'positive'
         return 'neutral'
 
-    def generate(self):
+    def generate(self) -> None:
         for text in tqdm(self.texts, desc="labeling"):
             text = self._translator.translate(text)
             polarity = self._get_compound_polarity(text)
@@ -93,7 +93,7 @@ class VaderLabeler(Labeler):
 #         self._tagger = Classifier.load('sentiment')
 
 #     @property
-#     def scores(self):
+#     def scores(self) -> list:
 #         return self._scores
 
 #     def _get_sentiment_score(self, text) -> list:
@@ -101,7 +101,7 @@ class VaderLabeler(Labeler):
 #         self._tagger.predict(sentence)
 #         return sentence.labels
 
-#     def generate(self):
+#     def generate(self) -> None:
 #         for text in tqdm(self.texts, desc="labeling"):
 #             translated_text = self._translator.translate(text)
 #             sentiment_score = self._get_sentiment_score(translated_text)

@@ -7,35 +7,47 @@ from googletrans import Translator
 
 
 class TweetScraper:
-    def __init__(self, keyword, lang, since, until):
+    def __init__(
+        self,
+        keyword: str,
+        lang: str,
+        since: str,
+        until: str,
+    ):
         self.keyword = keyword
         self.lang = lang
         self.since = since
         self.until = until
-        self._tweet_attr = ["Tweet_ID", "Datetime", "Username", "Text"]
-        self._tweets_table = DataFrame(columns=self._tweet_attr)
-        self._num_of_tweets = 0
+        self._tweet_attr = [
+            "Tweet_ID",
+            "Datetime",
+            "Username",
+            "Text",
+        ]
+        self._tweets_table = None
+        self._n_tweets = 0
 
     @property
-    def num_of_tweets(self):
-        return self._num_of_tweets
+    def n_tweets(self) -> int:
+        return self._n_tweets
 
     @property
-    def tweets_table(self):
+    def tweets_table(self) -> DataFrame:
         return self._tweets_table
 
-    def scrape(self):
-        query = self.keyword + " lang:" + self.lang
-        query += " since:" + self.since + " until:" + self.until
+    def scrape(self) -> None:
+        query = f"{self.keyword} lang:{self.lang}"
+        query += f" since:{self.since} until:{self.until}"
         scraper = TwitterSearchScraper(query)
-        self._num_of_tweets = len(list(scraper.get_items()))
+        self._n_tweets = len(list(scraper.get_items()))
+        tweets_table = DataFrame(columns=self._tweet_attr)
         for i, tweet in enumerate(
                 tqdm(
                     scraper.get_items(),
-                    total=self._num_of_tweets,
+                    total=self._n_tweets,
                     desc="Scraping",
                 )):
-            self._tweets_table.loc[i] = [
+            tweets_table.loc[i] = [
                 tweet.id,
                 tweet.date,
                 tweet.user.username,
@@ -43,38 +55,40 @@ class TweetScraper:
             ]
             time.sleep(0.001)
 
-        # reverse tweets order
-        self._tweets_table = self._tweets_table[::-1].reset_index(drop=True)
+        tweets_table[::-1].reset_index(drop=True, inplace=True)
+        self._tweets_table = tweets_table
 
     def _find_keyword(self, text) -> bool:
-        regex = self.keyword.replace(" AND ", "|").replace(" OR ", "|")
+        regex = self.keyword.replace(" AND ", "|")
+        regex = regex.replace(" OR ", "|")
         if re.search(regex, text.lower()):
             return True
         return False
 
-    def _detect_language(self, text) -> str:
+    def _detect_lang(self, text) -> str:
         translator = Translator()
         return translator.detect(text).lang
 
-    def remove_irrelevant(self):
-        relevant_tweets_table = DataFrame(columns=self._tweet_attr)
-        irrelevant_tweets_table = DataFrame(columns=self._tweet_attr)
+    def remove_irrelevant(self) -> DataFrame:
+        columns = self._tweet_attr
+        relevant_tweets_table = DataFrame(columns=columns)
+        irrelevant_tweets_table = DataFrame(columns=columns)
         for i, text in enumerate(
                 tqdm(
                     self._tweets_table["Text"],
-                    total=self._num_of_tweets,
+                    total=self._n_tweets,
                     desc="Removing irrelevant",
                 )):
             tweet = self._tweets_table.loc[i]
-            if self._find_keyword(text) and self._detect_language(
+            if self._find_keyword(text) and self._detect_lang(
                     text) == self.lang:
-                new_idx = len(relevant_tweets_table)
-                relevant_tweets_table.loc[new_idx] = tweet
+                index = len(relevant_tweets_table)
+                relevant_tweets_table.loc[index] = tweet
             else:
-                new_idx = len(irrelevant_tweets_table)
-                irrelevant_tweets_table.loc[new_idx] = tweet
+                index = len(irrelevant_tweets_table)
+                irrelevant_tweets_table.loc[index] = tweet
             time.sleep(0.001)
 
-        self._num_of_tweets = len(relevant_tweets_table)
-        self._tweets_table = relevant_tweets_table.copy()
+        self._n_tweets = len(relevant_tweets_table)
+        self._tweets_table = relevant_tweets_table
         return irrelevant_tweets_table
