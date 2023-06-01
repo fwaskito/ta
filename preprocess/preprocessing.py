@@ -3,6 +3,7 @@ import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from collection.antonym.kamus_antonim import KamusAntonim
 from collection.slang.convertion import SlangConverter
 
 
@@ -11,9 +12,11 @@ class TextPreprocessor:
         self._stopwords_id = self.get_stopwords()
         self._stemmer = StemmerFactory().create_stemmer()
         self._slang_converter = SlangConverter()
+        self._kamus_antonim = KamusAntonim()
 
     def get_stopwords(self) -> set:
         stopwords_id = stopwords.words("indonesian")
+        stopwords_id.remove("tidak")
         additions = [
             "ah", "ih", "uh", "eh", "oh", "hai", "halo", "oi", "ayo",
             "yuk", "ya", "yah", "mah", "nah", "wah", "alah", "oalah",
@@ -41,7 +44,7 @@ class TextPreprocessor:
         return filtered_tokens
 
     def stem(self, tokens) -> str:
-        if type(tokens) is list:
+        if isinstance(tokens) is not str:
             stemmed_tokens = []
             for token in tokens:
                 stemmed_token = self._stemmer.stem(token)
@@ -49,6 +52,34 @@ class TextPreprocessor:
 
             return " ".join(stemmed_tokens)
         return self._stemmer.stem(tokens)
+
+    def _handle_negation(self, token) -> str | None:
+        if token not in self._stopwords_id:
+            token = self._stemmer.stem(token)
+            antonym = self._kamus_antonim.get_antonym(token)
+            if antonym:
+                if antonym not in self._stopwords_id:
+                    return self._stemmer.stem(antonym)
+        return None
+
+    def filter_stem(self, tokens) -> str:
+        stemmed_tokens = []
+        i, n_token = 0, len(tokens)
+        while i < n_token:
+            token = tokens[i]
+            if token not in self._stopwords_id:
+                if token == "tidak" and i+1 < n_token:
+                    antonym = self._handle_negation(tokens[i+1])
+                    if antonym:
+                        stemmed_tokens.append(antonym)
+                        i += 1
+
+                    i += 1
+                    continue
+                token = self._stemmer.stem(token)
+                stemmed_tokens.append(token)
+            i += 1
+        return " ".join(stemmed_tokens)
 
 
 class TextCleaner:
@@ -171,11 +202,3 @@ class TextCleaner:
         self.remove_math_symbol()
         self.remove_other_punct()
         self.remove_space()
-
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()
