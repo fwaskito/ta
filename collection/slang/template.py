@@ -3,14 +3,18 @@ import time
 from tqdm import tqdm
 from pandas import DataFrame
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-from preprocess.preprocess import TextPreprocessor
+from preprocess.preprocessing import TextPreprocessor
 
 
 class KamusSlangTemplate:
     def __init__(self, texts) -> None:
         self.texts = texts
-        self._template = DataFrame(
-            columns=["Slang", "Makna", "No_Konteks", "Konteks"])
+        self._template = DataFrame(columns=[
+            "Slang",
+            "Makna",
+            "No_Konteks",
+            "Konteks",
+        ])
 
     @property
     def template(self) -> DataFrame:
@@ -37,6 +41,7 @@ class KamusSlangTemplate:
         for i, text in enumerate(tqdm(self.texts)):
             text = re.sub(r"\s+", " ", text)
             tokens = self._prepare_text(text)
+
             for j, token in enumerate(tokens["stemmed"]):
                 if token not in kata_dasar_list:
                     if tokens["filtered"][j] not in slangs:
