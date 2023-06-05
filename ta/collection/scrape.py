@@ -1,9 +1,13 @@
-import re
-import time
-from tqdm import tqdm
+# Created Date: Sun, Feb 5th 2023
+# Author: F. Waskito
+# Last Modified: Sun, Jun 4th 2023 8:35:26 AM
+
+from re import search
+from time import sleep
 from pandas import DataFrame
 from snscrape.modules.twitter import TwitterSearchScraper
 from googletrans import Translator
+from tqdm import tqdm
 
 
 class TweetScraper:
@@ -53,7 +57,7 @@ class TweetScraper:
                 tweet.user.username,
                 tweet.rawContent,
             ]
-            time.sleep(0.001)
+            sleep(0.001)
 
         tweets_table[::-1].reset_index(drop=True, inplace=True)
         self._tweets_table = tweets_table
@@ -61,7 +65,7 @@ class TweetScraper:
     def _find_keyword(self, text) -> bool:
         regex = self.keyword.replace(" AND ", "|")
         regex = regex.replace(" OR ", "|")
-        if re.search(regex, text.lower()):
+        if search(regex, text.lower()):
             return True
         return False
 
@@ -87,8 +91,8 @@ class TweetScraper:
             else:
                 index = len(irrelevant_tweets_table)
                 irrelevant_tweets_table.loc[index] = tweet
-            time.sleep(0.001)
 
+            sleep(0.001)
         self._n_tweets = len(relevant_tweets_table)
         self._tweets_table = relevant_tweets_table
         return irrelevant_tweets_table

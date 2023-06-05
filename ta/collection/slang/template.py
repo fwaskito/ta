@@ -1,5 +1,9 @@
-import re
-import time
+# Created Date: Mon, May 8th 2023
+# Author: F. Waskito
+# Last Modified: Sun, Jun 4th 2023 8:30:48 AM
+
+from re import sub
+from time import sleep
 from tqdm import tqdm
 from pandas import DataFrame
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
@@ -7,7 +11,7 @@ from preprocess.preprocessing import TextPreprocessor
 
 
 class KamusSlangTemplate:
-    def __init__(self, texts) -> None:
+    def __init__(self, texts: list[str]) -> None:
         self.texts = texts
         self._template = DataFrame(columns=[
             "Slang",
@@ -39,9 +43,8 @@ class KamusSlangTemplate:
         kata_dasar_list = factory.get_words()
         kata_dasar_list.remove("")
         for i, text in enumerate(tqdm(self.texts)):
-            text = re.sub(r"\s+", " ", text)
+            text = sub(r"\s+", " ", text)
             tokens = self._prepare_text(text)
-
             for j, token in enumerate(tokens["stemmed"]):
                 if token not in kata_dasar_list:
                     if tokens["filtered"][j] not in slangs:
@@ -49,7 +52,7 @@ class KamusSlangTemplate:
                         contexts.append(text)
                         indices.append(i)
 
-            time.sleep(0.001)
+            sleep(0.001)
         self._template["Slang"] = slangs
         self._template["Konteks"] = contexts
         self._template["No_Konteks"] = indices

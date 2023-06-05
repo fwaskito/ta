@@ -1,9 +1,12 @@
-from numpy.typing import ArrayLike
+# Created Date: Sun, May 28th 2023
+# Author: F. Waskito
+# Last Modified: Sun, Jun 4th 2023 8:43:17 AM
+
 from numpy import ndarray, array
 
 
 class LabelEncoder:
-    def __init__(self, labels: ArrayLike) -> None:
+    def __init__(self, labels: list) -> None:
         self._labels = labels
         self._classes = sorted(list(set(labels)))
         self._encoded_labels = []

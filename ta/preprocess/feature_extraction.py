@@ -1,5 +1,12 @@
+# Created Date: Mon, Mar 20th 2023
+# Author: F. Waskito
+# Last Modified: Sun, Jun 4th 2023 8:41:11 AM
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import MinMaxScaler
+from numpy import ndarray
+
 
 class TextVectorizer:
     def __init__(self, corpus):
@@ -8,28 +15,27 @@ class TextVectorizer:
         self._vocabs = None
 
     @property
-    def vectors(self):
+    def vectors(self) -> ndarray:
         return self._vectors
 
     @property
-    def vocabs(self):
+    def vocabs(self) -> tuple:
         return self._vocabs
 
-    def _bow_vectorize(self, min_df, norm):
+    def _bow_vectorize(self, min_df, norm: bool) -> None:
         vectorizer = CountVectorizer(min_df=min_df)
         vectors = vectorizer.fit_transform(self._corpus)
         vectors = vectors.toarray()
         if norm:
-            max_val = vectors.max()
-            min_val = vectors.min()
-            self._vectors = (vectors) / (max_val - min_val)
+            scaler = MinMaxScaler()
+            self._vectors = scaler.fit_transform(vectors)
         else:
             self._vectors = vectors
 
         vocabs = tuple(vectorizer.get_feature_names_out())
         self._vocabs = vocabs
 
-    def _tfidf_vectorize(self, min_df, norm, smooth_idf=True):
+    def _tfidf_vectorize(self, min_df, norm) -> None:
         norm_type = None
         if norm:
             norm_type = "l2"
@@ -37,14 +43,19 @@ class TextVectorizer:
         vectorizer = TfidfVectorizer(
             min_df=min_df,
             norm=norm_type,
-            smooth_idf=smooth_idf,
+            smooth_idf=True,
         )
         vectors = vectorizer.fit_transform(self._corpus)
         self._vectors = vectors.toarray()
         vocabs = tuple(vectorizer.get_feature_names_out())
         self._vocabs = vocabs
 
-    def transform(self, target="bow", min_df=1, norm=False):
+    def transform(
+        self,
+        target: str,
+        min_df: int = 1,
+        norm: bool = False,
+    ) -> None:
         if target == "bow":
             self._bow_vectorize(min_df, norm)
         elif target == "tfidf":

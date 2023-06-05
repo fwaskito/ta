@@ -1,6 +1,11 @@
+# Created Date: Sun, Feb 5th 2023
+# Author: F. Waskito
+# Last Modified: Sun, Jun 4th 2023 8:34:07 AM
+
+from typing import Union
 from abc import ABC, abstractmethod
-from deep_translator import GoogleTranslator
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from deep_translator import GoogleTranslator
 from textblob import TextBlob
 from tqdm import tqdm
 # from flair.data import Sentence
@@ -18,11 +23,11 @@ class Labeler(ABC):
         )
 
     @property
-    def labels(self) -> list:
+    def labels(self) -> list[str]:
         return self._labels
 
     @property
-    def polarities(self) -> list:
+    def polarities(self) -> list[Union[float, int]]:
         return self._polarities
 
     @abstractmethod
@@ -36,7 +41,7 @@ class BlobLabeler(Labeler):
         self._subjectivities = []
 
     @property
-    def subjectivities(self) -> list:
+    def subjectivities(self) -> list[Union[float, int]]:
         return self._subjectivities
 
     def _get_sentiment(self, text) -> float:
@@ -93,7 +98,7 @@ class VaderLabeler(Labeler):
 #         self._tagger = Classifier.load('sentiment')
 
 #     @property
-#     def scores(self) -> list:
+#     def scores(self) -> list[Union[float, int]]:
 #         return self._scores
 
 #     def _get_sentiment_score(self, text) -> list:
