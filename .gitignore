@@ -5,3 +5,5 @@
 .pydevproject
 .spyproject
 .vscode
+.ipynb*
+__pycache__

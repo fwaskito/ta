@@ -24,12 +24,14 @@ class TextPreprocessor:
     def get_stopwords(self) -> set:
         stopwords_id = stopwords.words("indonesian")
         additions = [
-            "ah", "ih", "uh", "eh", "oh", "hai", "halo", "oi", "ayo",
-            "yuk", "ya", "yah", "mah", "nah", "wah", "alah", "oalah",
-            "dah", "dih", "aduh", "deh", "loh", "kok", "kek", "entah",
-            "sih", "si", "wow", "aw", "ea", "cie", "kak", "dik", "mba",
-            "mas", "bang", "bu", "om", "bund", "nder", "thor", "nge",
-            "kah", "ber", "an", "ku", "mu", "nya", "tawa", "berdeham"
+            "ah", "ih", "uh", "eh", "oh", "hai", "halo",
+            "oi", "ayo", "yuk", "ya", "yah", "mah", "nah",
+            "wah", "alah", "oalah", "dah", "dih", "aduh",
+            "deh", "loh", "kok", "kek", "entah", "sih",
+            "si", "wow", "aw", "ea", "cie", "kak", "dik",
+            "mba", "mas", "bang", "bu", "om", "bund",
+            "nder", "thor", "nge", "kah", "ber", "an",
+            "ku", "mu", "nya", "tawa", "berdeham"
         ]
         return set([*stopwords_id, *additions])
 
