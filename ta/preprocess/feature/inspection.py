@@ -1,6 +1,6 @@
 # Created Date: Sat, Jun 17th 2023
 # Author: F. Waskito
-# Last Modified: Sat, Jun 17th 2023 10:37:01 PM
+# Last Modified: Tue, Sep 19th 2023 01:48:01 PM
 
 from typing import Union
 
@@ -22,6 +22,14 @@ class TextVectorInspector:
         if term in self._vocabs:
             return self._df_dict[term]
         return None
+
+    def get_min_df(self) -> list:
+        return sorted(set(self._df_dict.values()))[0]
+
+    def get_index_term(self, term: str) -> int:
+        for i, term_i in enumerate(self._vocabs):
+            if term_i == term:
+                return i
 
     def get_nterms_df(self, target_df: int) -> int:
         nterm_df = 0
