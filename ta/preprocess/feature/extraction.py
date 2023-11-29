@@ -1,6 +1,6 @@
 # Created Date: Mon, Mar 20th 2023
 # Author: F. Waskito
-# Last Modified: Sun, Jun 4th 2023 8:41:11 AM
+# Last Modified: Thu, Nov 30th 2023 0:11:11 AM
 
 from numpy import ndarray
 from sklearn.preprocessing import MinMaxScaler
@@ -41,7 +41,7 @@ class TextVectorizer:
         vocabs = tuple(vectorizer.get_feature_names_out())
         self._vocabs = vocabs
 
-    def _tfidf_vectorize(self, min_df, norm) -> None:
+    def _tfidf_vectorize(self, min_df, norm: bool, smooth_idf: bool) -> None:
         norm_type = None
         if norm:
             norm_type = "l2"
@@ -49,7 +49,7 @@ class TextVectorizer:
         vectorizer = TfidfVectorizer(
             min_df=min_df,
             norm=norm_type,
-            smooth_idf=True,
+            smooth_idf=smooth_idf,
         )
         vectors = vectorizer.fit_transform(self._corpus)
         self._vectors = vectors.toarray()
@@ -61,11 +61,12 @@ class TextVectorizer:
         target: str,
         min_df: int = 1,
         norm: bool = False,
+        smooth_idf: bool = False,
     ) -> None:
         if target == "bow":
             self._bow_vectorize(min_df, norm)
         elif target == "tfidf":
-            self._tfidf_vectorize(min_df, norm)
+            self._tfidf_vectorize(min_df, norm, smooth_idf)
 
     def create_inspector(self) -> None:
         if self.vectors is None:
