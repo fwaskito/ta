@@ -1,6 +1,6 @@
 # Created Date: Thu, May 18th 2023
 # Author: F. Waskito
-# Last Modified: Sun, Jan 21st 2024 11:56:22 PM
+# Last Modified: Mon, Jan 22nd 2024 6:16:22 PM
 
 import numpy
 import seaborn as sns
@@ -95,7 +95,7 @@ def plot_hyperplane(svm_clf, data):
     # ---w is the vector of weights---
     w = svm_clf.coef_[0]
 
-    # ---find the slope of the hyperplane---
+    # ---find the slopw of the hyperplane---
     slope = -w[0] / w[1]
 
     # ---bias---
@@ -139,9 +139,14 @@ def plot_performance_2d(
     legend: str,
     title: str,
     best_label: bool = True,
-    scatter_colors: list[str] = ["red", "blue", "purple"],
-    plot_colors: list[str] = ["lightcoral", "cornflowerblue", "orchid"],
+    colors: dict[list[str]] = None,
 ):
+    if colors is None:
+        colors = {
+            "scatter": ["red", "blue", "purple"],
+            "plot": ["lightcoral", "cornflowerblue", "orchid"],
+        }
+
     axes_labels = []
     for i, (res_key, ax_dict) in enumerate(res_dict.items()):
         if best_label:
@@ -159,14 +164,14 @@ def plot_performance_2d(
             axes[0],
             axes[1],
             marker=".",
-            color=scatter_colors[i],
+            color=colors["scatter"][i],
             label=res_key,
         )
 
         plt.plot(
             axes[0],
             axes[1],
-            color=plot_colors[i],
+            color=colors["plot"][i],
         )
 
         if best_label:
@@ -180,6 +185,68 @@ def plot_performance_2d(
 
     plt.xlabel(axes_labels[0])
     plt.ylabel(axes_labels[1])
+    plt.legend(loc=legend)
+    plt.title(title)
+    plt.show()
+
+
+def plot_performance_3d(
+    res_dict: dict[dict],
+    legend: str,
+    title: str,
+    best_label: bool = True,
+    colors: dict[list[str]] = None,
+):
+    if colors is None:
+        colors = {
+            "scatter": ["red", "blue", "purple"],
+            "plot": ["lightcoral", "cornflowerblue", "orchid"],
+        }
+
+    axes_labels = []
+    plt.figure(figsize=(10, 7))
+    ax = plt.axes(projection="3d")
+    for i, (res_key, ax_dict) in enumerate(res_dict.items()):
+        if best_label:
+            idxmax = ax_dict["Akurasi"].idxmax()
+
+        best = []
+        axes = []
+        for ax_label, ax_values in ax_dict.items():
+            axes.append(ax_values)
+            axes_labels.append(ax_label)
+            if best_label:
+                best.append(ax_values[idxmax])
+
+        ax.scatter3D(
+            axes[0],
+            axes[1],
+            axes[2],
+            marker=".",
+            color=colors["scatter"][i],
+            label=res_key,
+        )
+
+        ax.plot3D(
+            axes[0],
+            axes[1],
+            axes[2],
+            color=colors["plot"][i],
+        )
+
+        if best_label:
+            best_label = f"best {res_key} ({axes_labels[0]}={best[0]}, {axes_labels[1]}={best[1]})"
+            ax.text(
+                best[0] * (1 + 0.001),
+                best[1] * (1 + 0.001),
+                best[2] * (1 + 0.001),
+                best_label,
+                fontsize=8,
+            )
+
+    ax.set_xlabel(axes_labels[0])
+    ax.set_ylabel(axes_labels[1])
+    ax.set_zlabel(axes_labels[2])
     plt.legend(loc=legend)
     plt.title(title)
     plt.show()
