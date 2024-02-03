@@ -1,10 +1,15 @@
 # Created Date: Thu, May 18th 2023
 # Author: F. Waskito
-# Last Modified: Mon, Jan 22nd 2024 6:16:22 PM
+# Last Modified: Fri, Jan 26th 2024 2:25:15 PM
 
+from typing import Union
 import numpy
-import seaborn as sns
-from matplotlib import pyplot as plt
+import pandas
+import seaborn
+from numpy import ndarray
+from pandas import DataFrame
+from matplotlib import pyplot
+from mlxtend.plotting import plot_confusion_matrix
 from collections import Counter
 
 
@@ -25,16 +30,16 @@ def plot_class(X, y):
     class_distribution = Counter(y)
     for label, _ in class_distribution.items():
         row_ix = numpy.where(y == label)[0]
-        plt.scatter(X[row_ix, 0], X[row_ix, 1], label=str(label))
+        pyplot.scatter(X[row_ix, 0], X[row_ix, 1], label=str(label))
 
-    plt.title("Samples by Class")
-    plt.legend()
-    plt.show()
+    pyplot.title("Samples by Class")
+    pyplot.legend()
+    pyplot.show()
 
 
 def plot_vector(X, y, legend):
     classes = list(set(y))
-    plt.scatter(
+    pyplot.scatter(
         X[y == classes[0], 0],
         X[y == classes[0], 1],
         color="#A50000",
@@ -42,7 +47,7 @@ def plot_vector(X, y, legend):
         label=classes[0],
         s=70,
     )
-    plt.scatter(
+    pyplot.scatter(
         X[y == classes[1], 0],
         X[y == classes[1], 1],
         color="#2400A5",
@@ -50,11 +55,10 @@ def plot_vector(X, y, legend):
         label=classes[1],
         s=70,
     )
-    plt.xlabel(r"$x_1$")
-    plt.ylabel(r"$x_2$")
-    plt.legend(loc=legend)
-    plt.show()
-    plt.show()
+    pyplot.xlabel(r"$x_1$")
+    pyplot.ylabel(r"$x_2$")
+    pyplot.legend(loc=legend)
+    pyplot.show()
 
 
 def plot_decision_boundary(svm_clf, X):
@@ -74,21 +78,21 @@ def plot_decision_boundary(svm_clf, X):
     gutter_down = y_points - margin
     svs = svm_clf.support_vectors_
 
-    plt.scatter(
+    pyplot.scatter(
         svs[:, 0],
         svs[:, 1],
         facecolors="#BBB9BB",
         s=250,
     )
-    plt.plot(
+    pyplot.plot(
         x_points,
         y_points,
         "k-",
         linewidth=2,
         label="Hyperplane",
     )
-    plt.plot(x_points, gutter_up, "k--", linewidth=1)
-    plt.plot(x_points, gutter_down, "k--", linewidth=1)
+    pyplot.plot(x_points, gutter_up, "k--", linewidth=1)
+    pyplot.plot(x_points, gutter_down, "k--", linewidth=1)
 
 
 def plot_hyperplane(svm_clf, data):
@@ -116,7 +120,7 @@ def plot_hyperplane(svm_clf, data):
     yy_up = slope * xx + (sv[1] - slope * sv[0])
 
     # ---plot the points---
-    sns.lmplot(
+    seaborn.lmplot(
         x="x1",
         y="x2",
         data=data,
@@ -127,28 +131,47 @@ def plot_hyperplane(svm_clf, data):
     )
 
     # ---plot the hyperplane---
-    plt.plot(xx, yy, linewidth=2, color="green")
+    pyplot.plot(xx, yy, linewidth=2, color="green")
 
     # ---plot the 2 margins---
-    plt.plot(xx, yy_down, "k--")
-    plt.plot(xx, yy_up, "k--")
+    pyplot.plot(xx, yy_down, "k--")
+    pyplot.plot(xx, yy_up, "k--")
 
 
 def plot_performance_2d(
     res_dict: dict[dict],
     legend: str,
-    title: str,
+    title: str = None,
     best_label: bool = True,
     colors: dict[list[str]] = None,
+    linestyles: list = None,
+    figsize: set = (6.4, 4.8),
+    ticksize: list = [10, 10],
 ):
+    ax_aliases = {
+        "Iterasi": "i",
+        "Akurasi": "acc",
+        "C": "$C$",
+        "Gamma": "$\gamma$",
+        "Degree": "$d$",
+    }
+
     if colors is None:
         colors = {
             "scatter": ["red", "blue", "purple"],
             "plot": ["lightcoral", "cornflowerblue", "orchid"],
         }
 
-    axes_labels = []
+    if linestyles is None:
+        linestyles = ["-", "--"]
+
+    pyplot.figure(figsize=figsize)
+    res_keys = []
+    ax_labels = []
+    l = 0
+    c = 0
     for i, (res_key, ax_dict) in enumerate(res_dict.items()):
+        res_keys.append(res_key)
         if best_label:
             idxmax = ax_dict["Akurasi"].idxmax()
 
@@ -156,57 +179,109 @@ def plot_performance_2d(
         axes = []
         for ax_label, ax_values in ax_dict.items():
             axes.append(ax_values)
-            axes_labels.append(ax_label)
+            ax_labels.append(ax_label)
             if best_label:
                 best.append(ax_values[idxmax])
 
-        plt.scatter(
+        pyplot.scatter(
             axes[0],
             axes[1],
             marker=".",
-            color=colors["scatter"][i],
+            color=colors["scatter"][c],
             label=res_key,
         )
 
-        plt.plot(
+        pyplot.plot(
             axes[0],
             axes[1],
-            color=colors["plot"][i],
+            linestyle=linestyles[l],
+            color=colors["plot"][c],
         )
 
         if best_label:
-            best_label = f"best {res_key} ({axes_labels[0]}={best[0]})"
-            plt.text(
+            best_label = f"best {res_key} ("
+            for j, ax_label in enumerate(ax_labels):
+                best_label += f"{ax_aliases[ax_label]}={best[j]}"
+                if j < len(ax_labels) - 1:
+                    best_label += ", "
+            best_label += ")"
+
+            pyplot.text(
                 best[0] * (1 + 0.001),
                 best[1] * (1 + 0.001),
                 best_label,
                 fontsize=8,
             )
 
-    plt.xlabel(axes_labels[0])
-    plt.ylabel(axes_labels[1])
-    plt.legend(loc=legend)
-    plt.title(title)
-    plt.show()
+        if i < len(res_dict) - 1:
+            ax_labels.clear()
+
+        if c == len(colors["scatter"]) - 1:
+            l += 1
+            c = 0
+        else:
+            c += 1
+
+    if "Iterasi" in ax_labels:
+        pyplot.xticks(res_dict[res_keys[0]]["Iterasi"])
+
+    if "Degree" in ax_labels:
+        pyplot.yticks([3, 6, 9])
+
+    if "C" in ax_labels:
+        idx = ax_labels.index("C")
+        if idx == 0:
+            pyplot.xticks([1, 100, 1000, 10000])
+        else:
+            pyplot.yticks([1, 100, 1000, 10000])
+
+    if "Gamma" in ax_labels:
+        idx = ax_labels.index("Gamma")
+        if idx == 0:
+            pyplot.xticks([0.01, 0.1, 1.0])
+        else:
+            pyplot.yticks([0.01, 0.1, 1.0])
+
+    if title:
+        pyplot.title(title, fontsize=11)
+
+    pyplot.xticks(fontsize=ticksize[0])
+    pyplot.yticks(fontsize=ticksize[1])
+    pyplot.xlabel(ax_labels[0])
+    pyplot.ylabel(ax_labels[1])
+    pyplot.legend(loc=legend)
+    pyplot.grid(True)
+    pyplot.show()
 
 
 def plot_performance_3d(
     res_dict: dict[dict],
     legend: str,
-    title: str,
+    title: str = None,
     best_label: bool = True,
     colors: dict[list[str]] = None,
+    figsize: set = (10, 7),
 ):
+    ax_aliases = {
+        "Iterasi": "i",
+        "Akurasi": "acc",
+        "C": "$C$",
+        "Gamma": "$\gamma$",
+        "Degree": "$d$",
+    }
     if colors is None:
         colors = {
             "scatter": ["red", "blue", "purple"],
             "plot": ["lightcoral", "cornflowerblue", "orchid"],
         }
 
-    axes_labels = []
-    plt.figure(figsize=(10, 7))
-    ax = plt.axes(projection="3d")
+    res_keys = []
+    ax_labels = []
+    pyplot.figure(figsize=figsize)
+    ax = pyplot.axes(projection="3d")
+    k = 0
     for i, (res_key, ax_dict) in enumerate(res_dict.items()):
+        res_keys.append(res_key)
         if best_label:
             idxmax = ax_dict["Akurasi"].idxmax()
 
@@ -214,7 +289,7 @@ def plot_performance_3d(
         axes = []
         for ax_label, ax_values in ax_dict.items():
             axes.append(ax_values)
-            axes_labels.append(ax_label)
+            ax_labels.append(ax_label)
             if best_label:
                 best.append(ax_values[idxmax])
 
@@ -223,7 +298,7 @@ def plot_performance_3d(
             axes[1],
             axes[2],
             marker=".",
-            color=colors["scatter"][i],
+            color=colors["scatter"][i - k],
             label=res_key,
         )
 
@@ -231,11 +306,17 @@ def plot_performance_3d(
             axes[0],
             axes[1],
             axes[2],
-            color=colors["plot"][i],
+            color=colors["plot"][i - k],
         )
 
         if best_label:
-            best_label = f"best {res_key} ({axes_labels[0]}={best[0]}, {axes_labels[1]}={best[1]})"
+            best_label = f"best {res_key} ("
+            for j, ax_label in enumerate(ax_labels):
+                best_label += f"{ax_aliases[ax_label]}={best[j]}"
+                if j < len(ax_labels) - 1:
+                    best_label += ", "
+            best_label += ")"
+
             ax.text(
                 best[0] * (1 + 0.001),
                 best[1] * (1 + 0.001),
@@ -244,9 +325,92 @@ def plot_performance_3d(
                 fontsize=8,
             )
 
-    ax.set_xlabel(axes_labels[0])
-    ax.set_ylabel(axes_labels[1])
-    ax.set_zlabel(axes_labels[2])
-    plt.legend(loc=legend)
-    plt.title(title)
-    plt.show()
+        if i < len(res_dict) - 1:
+            ax_labels.clear()
+
+        if i == len(colors["scatter"]):
+            k += len(colors["scatter"])
+
+    if "Degree" in ax_labels:
+        ax.set_yticks([3, 6, 9])
+
+    if "C" in ax_labels:
+        idx = ax_labels.index("C")
+        if idx == 0:
+            ax.set_xticks([1, 100, 1000, 10000])
+        else:
+            ax.set_yticks([1, 100, 1000, 10000])
+
+    if "Gamma" in ax_labels:
+        idx = ax_labels.index("Gamma")
+        if idx == 0:
+            ax.set_xticks([0.01, 0.1, 1.0])
+        else:
+            ax.set_yticks([0.01, 0.1, 1.0])
+
+    if title:
+        pyplot.title(title, fontsize=11)
+
+    ax.set_xlabel(ax_labels[0])
+    ax.set_ylabel(ax_labels[1])
+    ax.set_zlabel(ax_labels[2])
+    pyplot.legend(loc=legend)
+    pyplot.show()
+
+
+def plot_heatmap(
+    cm: Union[ndarray, DataFrame],
+    title: str = None,
+    cmap: str = "magma",
+) -> None:
+    classes = ["negatif", "netral", "positif"]
+    if cm is DataFrame:
+        cm_table = cm
+    else:
+        cm_table = pandas.DataFrame(cm)
+
+    cm_table.columns = classes
+    cm_table.index = classes
+    cm_table.columns.name = "kelas prediksi"
+    cm_table.index.name = "kelas aktual"
+    seaborn.set(font_scale=1.2)
+    seaborn.heatmap(
+        cm_table,
+        annot=True,
+        annot_kws={"size": 14},
+        fmt="d",
+        cmap=cmap,
+        linewidths=1,
+        linecolor="k",
+    )
+
+    if title:
+        pyplot.title(title)
+
+    pyplot.show()
+
+
+def plot_confmatrix(
+    cm: Union[ndarray, DataFrame],
+    title: str = None,
+    cmap: str = "magma",
+    figsize: set = (6.4, 4.8),
+) -> None:
+    if cm is ndarray:
+        cm_array = cm
+    else:
+        cm_array = cm.to_numpy()
+
+    classes = ["negatif", "netral", "positif"]
+    fig, ax = plot_confusion_matrix(
+        conf_mat=cm_array,
+        colorbar=True,
+        class_names=classes,
+        cmap=cmap,
+        figsize=figsize,
+    )
+
+    ax.set_xlabel("kelas prediksi")
+    ax.set_ylabel("kelas aktual")
+    pyplot.title(title, fontsize=11)
+    pyplot.show()
