@@ -1,15 +1,17 @@
 # Created Date: Sat, Jan 20th 2024
 # Author: F. Waskito
-# Last Modified: Sat, Jan 20th 2024 10:21:13 AM
+# Last Modified: Tue, Jan 23rd 2024 5:48:33 AM
 
 from typing import Optional
 from itertools import product
 from numpy import ndarray
+from pandas import DataFrame
 from tqdm import tqdm
 from imblearn.over_sampling import SMOTE
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.metrics import precision_score, f1_score
+from sklearn.metrics import confusion_matrix
 from collection.helper import round_halfup
 
 
@@ -29,6 +31,7 @@ class SVMGridTester:
         self._random_state = random_state
         self.verbose: int = 2
         self._evaluation_result = []
+        self._confusion_matrices = []
         self._kernel = None
         self._param_keys = []
         self._param_combinations = None
@@ -41,7 +44,11 @@ class SVMGridTester:
     def evaluation_result(self) -> tuple:
         return tuple(self._evaluation_result)
 
-    def get_sequential_result(self) -> dict[list]:
+    @property
+    def confusion_matrices(self) -> tuple:
+        return tuple(self._confusion_matrices)
+
+    def get_table_result(self) -> DataFrame:
         sequential_result = {}
         for key in self._param_keys:
             sequential_result[key] = []
@@ -55,7 +62,28 @@ class SVMGridTester:
 
             for key, value in result["scores"].items():
                 sequential_result[key].append(value)
-        return sequential_result
+        return DataFrame(sequential_result)
+
+    def get_best_table_result(
+        self,
+        base_on: str = "f1",
+        n: int = 1,
+    ) -> DataFrame:
+        best_result = self.get_best_result(base_on, n)
+        sequential_result = {}
+        for key in self._param_keys:
+            sequential_result[key] = []
+
+        for key in self._scoring:
+            sequential_result[key] = []
+
+        for result in best_result:
+            for key, value in result["params"].items():
+                sequential_result[key].append(value)
+
+            for key, value in result["scores"].items():
+                sequential_result[key].append(value)
+        return DataFrame(sequential_result)
 
     def get_best_result(
         self,
@@ -97,9 +125,10 @@ class SVMGridTester:
             self._y_test,
         )
         score = tester.get_score()
-        return score
+        cm = tester.confusin_matrix
+        return score, cm
 
-    def _show_nparam_combination(self) -> None:
+    def _show_initialization(self) -> None:
         if self.verbose > 0:
             n = len(self._param_combinations)
             print(f"Total combination of parameters: {n}")
@@ -109,7 +138,7 @@ class SVMGridTester:
             print(f"i={i}|{set_params}  {scores}")
 
     def _search(self) -> None:
-        self._show_nparam_combination()
+        self._show_initialization()
         progress_bar = self.verbose > 2
         for i, set_params in enumerate(
             tqdm(
@@ -118,11 +147,12 @@ class SVMGridTester:
                 disable=not progress_bar,
             )
         ):
-            scores = self._test(set_params)
+            scores, cm = self._test(set_params)
             self._evaluation_result.append(
                 {
                     "params": set_params,
                     "scores": scores,
+                    "cm": cm,
                 }
             )
             self._show_new_result(i, set_params, scores)
@@ -173,6 +203,7 @@ class ImbalancedTester:
         self._random_state = random_state
         self._smoter = SMOTE(random_state=random_state)
         self._result = {}
+        self._confusion_matrix = None
 
     def get_score(self) -> dict:
         res_score = {}
@@ -180,6 +211,10 @@ class ImbalancedTester:
             score = round_halfup(score, 3)
             res_score[score_type] = score
         return res_score
+
+    @property
+    def confusin_matrix(self) -> ndarray:
+        return self._confusion_matrix
 
     def _score(self, y_test, y_pred) -> None:
         if "accuracy" in self._scoring:
@@ -199,6 +234,10 @@ class ImbalancedTester:
             f1 = f1_score(y_test, y_pred, average=avg)
             self._result["f1"] = f1
 
+    def _create_confusion_matrix(self, y_test, y_pred):
+        cm = confusion_matrix(y_test, y_pred)
+        self._confusion_matrix = cm
+
     def test(
         self,
         X_train: ndarray,
@@ -216,3 +255,4 @@ class ImbalancedTester:
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         self._score(y_test, y_pred)
+        self._create_confusion_matrix(y_test, y_pred)
