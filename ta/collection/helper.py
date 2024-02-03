@@ -1,11 +1,12 @@
 # Created Date: Wed, May 31st 2023
 # Author: F. Waskito
-# Last Modified: Sun, Jun 4th 2023 8:35:03 AM
+# Last Modified: Fri, Jan 26th 2024 10:22:11 PM
 
 from typing import Union
 from pathlib import Path
 import math
 import os
+from pandas import DataFrame
 
 
 def generate_ngram(
@@ -55,3 +56,35 @@ def round_halfup(
     """
     multiplier = 10**n_digits
     return math.floor(num * multiplier + 0.5) / multiplier
+
+
+def table_to_text(
+    table: DataFrame,
+    drop_col: list[str] = None,
+    sep: str = ",",
+    col_aliases: dict[str] = None,
+) -> str:
+    if drop_col:
+        table.drop(drop_col, axis=1, inplace=True)
+
+    if col_aliases is None:
+        col_aliases = {
+            "accuracy": "acc",
+            "f1": "f1",
+            "C": "$C$",
+            "gamma": "$\gamma$",
+            "degree": "$d$",
+        }
+
+    col_names = []
+    if col_aliases:
+        for i, name in enumerate(table.columns):
+            col_names.append(col_aliases[name])
+
+    values = table.loc[0].values
+    text = ""
+    for i, name in enumerate(col_names):
+        text += f"{name}={values[i]}"
+        if i < len(col_names) - 1:
+            text += sep + " "
+    return text
