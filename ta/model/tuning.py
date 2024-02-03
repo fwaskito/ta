@@ -1,10 +1,11 @@
 # Created Date: Sun, Jun 4th 2023
 # Author: F. Waskito
-# Last Modified: Sun, Jun 4th 2023 7:07:03 AM
+# Last Modified: Tue, Jan 23rd 2024 5:48:54 AM
 
 from typing import Optional
 from itertools import product
 from numpy import ndarray
+from pandas import DataFrame
 from tqdm import tqdm
 from sklearn.svm import SVC
 from validation.cross import ImbalancedCV
@@ -18,13 +19,14 @@ class SVMGridSearchCV:
         cv: int,
         scoring: list[str],
         scoring_avg: str = "weighted",
+        random_state: Optional[int] = None,
     ) -> None:
         self._model = model
         self._params = params
         self._cv = cv
         self._scoring = scoring
         self._scoring_avg = scoring_avg
-        self.random_state: Optional[int] = None
+        self._random_state = random_state
         self.verbose: int = 2
         self._evaluation_result = []
         self._kernel = None
@@ -37,7 +39,7 @@ class SVMGridSearchCV:
     def evaluation_result(self) -> tuple:
         return tuple(self._evaluation_result)
 
-    def get_sequential_result(self) -> dict[list]:
+    def get_table_result(self) -> DataFrame:
         sequential_result = {}
         for key in self._param_keys:
             sequential_result[key] = []
@@ -51,7 +53,28 @@ class SVMGridSearchCV:
 
             for key, value in result["scores"].items():
                 sequential_result[key].append(value)
-        return sequential_result
+        return DataFrame(sequential_result)
+
+    def get_best_table_result(
+        self,
+        base_on: str = "f1",
+        n: int = 1,
+    ) -> DataFrame:
+        best_result = self.get_best_result(base_on, n)
+        sequential_result = {}
+        for key in self._param_keys:
+            sequential_result[key] = []
+
+        for key in self._scoring:
+            sequential_result[f"mean_{key}"] = []
+
+        for result in best_result:
+            for key, value in result["params"].items():
+                sequential_result[key].append(value)
+
+            for key, value in result["scores"].items():
+                sequential_result[key].append(value)
+        return DataFrame(sequential_result)
 
     def get_best_result(
         self,
@@ -61,7 +84,7 @@ class SVMGridSearchCV:
         base_on = f"mean_{base_on}"
         return sorted(
             self._evaluation_result,
-            key=lambda x: x['scores'][base_on],
+            key=lambda x: x["scores"][base_on],
             reverse=True,
         )[:n]
 
@@ -75,9 +98,11 @@ class SVMGridSearchCV:
             reversed(
                 sorted(
                     self._evaluation_result,
-                    key=lambda x: x['scores'][base_on],
+                    key=lambda x: x["scores"][base_on],
                     reverse=True,
-                )[-(n):]))
+                )[-(n):]
+            )
+        )
 
     def _validate(self, set_params) -> dict:
         validator = ImbalancedCV(
@@ -85,16 +110,17 @@ class SVMGridSearchCV:
             n_fold=self._cv,
             scoring=self._scoring,
             scoring_avg=self._scoring_avg,
-            random_state=self.random_state,
+            random_state=self._random_state,
         )
         validator.progress_bar = False
         validator.validate(self._X, self._y)
         score = validator.get_score()
         return score
 
-    def _show_nparam_combination(self) -> None:
+    def _show_initialization(self) -> None:
         if self.verbose > 0:
             n = len(self._param_combinations)
+            print(f"Number of folds: {self._cv}")
             print(f"Total combination of parameters: {n}")
 
     def _show_new_result(self, i, set_params, scores) -> None:
@@ -102,19 +128,22 @@ class SVMGridSearchCV:
             print(f"i={i}|{set_params}  {scores}")
 
     def _search(self) -> None:
-        self._show_nparam_combination()
+        self._show_initialization()
         progress_bar = self.verbose > 2
         for i, set_params in enumerate(
-                tqdm(
-                    self._param_combinations,
-                    desc="search",
-                    disable=not progress_bar,
-                )):
+            tqdm(
+                self._param_combinations,
+                desc="search",
+                disable=not progress_bar,
+            )
+        ):
             scores = self._validate(set_params)
-            self._evaluation_result.append({
-                "params": set_params,
-                "scores": scores,
-            })
+            self._evaluation_result.append(
+                {
+                    "params": set_params,
+                    "scores": scores,
+                }
+            )
             self._show_new_result(i, set_params, scores)
 
     def _combine_params(self) -> list[dict]:
