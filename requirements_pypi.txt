@@ -1,0 +1,9 @@
+# Use this file only to install the package in an existing environment:
+# $ pip install r <this file>
+deep-translator==1.10.1
+googletrans-py==4.0.0
+mlxtend==0.23.1
+pandas-ods-reader==0.1.4
+sastrawi==1.0.1
+snscrape==0.6.2.20230320
+watermark==2.4.2

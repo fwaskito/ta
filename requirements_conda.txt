@@ -1,0 +1,15 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+cvxopt=1.3.2=py39h474676c_1
+imbalanced-learn=0.10.1=pyhd8ed1ab_0
+ipykernel=6.19.2=py39hd4e2768_0
+matplotlib=3.5.3=py39hcbf5309_2
+nltk=3.7=pyhd3eb1b0_0
+numpy=1.26.0=py39h055cbcc_0
+pandas=1.2.3=py39h2e25243_0
+python=3.9.18=h1aa4202_0
+scikit-learn=1.2.2=py39hd77b12b_1
+scikit-learn-intelex=2023.1.1=py39haa95532_0
+seaborn=0.12.2=py39haa95532_0
+textblob=0.15.3=py_0
+tqdm=4.65.0=py39hd4e2768_0
