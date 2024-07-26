@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using these metadata.
+title: "Public Sentiment Analysis of Mental Disorder based on Twitter Texts using Support Vector Machine: Source Code"
+authors:
+  - given-names: Fajar
+    family-names: Waskito
+    email: fajar.waskito10@gmail.com
+    orcid: "https://orcid.org/0009-0002-2940-9048"
+type: software
+version: 1.9.9
+doi: 10.5281/zenodo.12821800
+date-released: 2024-07-25
+license: AFL-3.0
+url: "https://github.com/fwaskito/ta"
